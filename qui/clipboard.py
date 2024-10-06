@@ -28,6 +28,7 @@ via Qubes RPC '''
 
 import asyncio
 import contextlib
+import json
 import math
 import os
 import fcntl
@@ -50,6 +51,7 @@ from .utils import run_asyncio_and_show_errors
 gbulb.install()
 
 DATA = "/var/run/qubes/qubes-clipboard.bin"
+METADATA = "/var/run/qubes/qubes-clipboard.bin.metadata"
 FROM = "/var/run/qubes/qubes-clipboard.bin.source"
 FROM_DIR = "/var/run/qubes/"
 XEVENT = "/var/run/qubes/qubes-clipboard.bin.xevent"
@@ -75,40 +77,110 @@ class EventHandler(pyinotify.ProcessEvent):
         self.gtk_app = gtk_app
         self.loop = loop if loop else asyncio.get_event_loop()
 
-    def _copy(self, vmname: str = None):
+    def _copy(self, metadata: dict) -> None:
         ''' Sends Copy notification via Gio.Notification
         '''
-        if vmname is None:
-            with appviewer_lock():
-                with open(FROM, 'r', encoding='ascii') as vm_from_file:
-                    vmname = vm_from_file.readline().strip('\n')
+        size = clipboard_formatted_size(metadata["sent_size"])
 
-        size = clipboard_formatted_size()
-
-        body = _("Clipboard contents fetched from qube: <b>'{vmname}'</b>\n"
+        if metadata["malformed_request"]:
+            body = _("Malformed clipboard request received from qube: "
+                     "<b>{vmname}</b>!").format(vmname=metadata["vmname"])
+        elif metadata["qrexec_clipboard"] and \
+                metadata["sent_size"] >= metadata["buffer_size"]:
+            # Microsoft Windows clipboard case
+            body = _("Qube: <b>{vmname}</b> sent {size} bytes to global "
+                     "clipboard which is over its set limit!\n"
+                     "Global clipboard might be truncated").format(
+                             vmname=metadata["vmname"],
+                             size=size)
+        elif metadata["oversized_request"]:
+            body = _("Qube: <b>{vmname}</b> clipboard is over allowed size:\n "
+                     "Size: {size} - Limit: {limit}\n"
+                     "Increase limit or use <i>qvm-copy</i> instead.\n"
+                     ).format(vmname=metadata["vmname"], size=size,limit= \
+                              clipboard_formatted_size(metadata["buffer_size"]))
+        elif metadata["successful"] and metadata["cleared"] and \
+                metadata["sent_size"] == 0:
+            body = _("Clipboard of source qube: <b>{vmname}</b> "
+                     "is empty".format(vmname=metadata["vmname"]))
+        elif not metadata["successful"]:
+            body = _("Failed clipboard copy request received from qube: "
+                     "<b>{vmname}</b>!").format(vmname=metadata["vmname"])
+        else:
+            body = _("Clipboard contents fetched from qube: <b>'{vmname}'</b>\n"
                  "Copied <b>{size}</b> to the global clipboard.\n"
                  "<small>Press {shortcut} in qube "
                  "to paste to local clipboard.</small>".format(
-            vmname=vmname, size=size, shortcut=self.gtk_app.paste_shortcut))
+                vmname=metadata["vmname"], size=size,
+                shortcut=self.gtk_app.paste_shortcut))
 
-        self.gtk_app.update_clipboard_contents(vmname, size, message=body)
+        if metadata["cleared"]:
+            body += _("\n<small>Global clipboard is wiped</small>")
 
-    def _paste(self):
+        self.gtk_app.update_clipboard_contents(metadata["vmname"], size,
+                                               message=body)
+
+    def _paste(self, metadata: dict) -> None:
         ''' Sends Paste notification via Gio.Notification.
         '''
-        body = _("Global clipboard contents copied to qube and wiped.<i/>\n"
-                 "<small>Paste normally in qube (e.g. Ctrl+V).</small>")
+        if not metadata["successful"] or metadata["malformed_request"]:
+            body = _("Failed to paste global clipboard contents to qube: "
+                     "<b>{vmname}</b>".format(vmname=metadata["vmname"]))
+            body += _("\n<small>Global clipboard is wiped</small>")
+        elif "protocol_version_xside" in metadata.keys() and \
+                metadata["protocol_version_xside"] >= 0x00010008:
+            body = _("Global clipboard contents of {size} copied to "
+                     "<b>{vmname}</b> and wiped.\n"
+                     "<small>Paste normally in qube (e.g. Ctrl+V)."
+                     "</small>".format(size=clipboard_formatted_size(
+                         metadata["sent_size"]), vmname=metadata["vmname"]))
+        else:
+            body = _("Global clipboard contents copied to qube and wiped.<i/>\n"
+                     "<small>Paste normally in qube (e.g. Ctrl+V).</small>")
         self.gtk_app.update_clipboard_contents(message=body)
 
-    def process_IN_CLOSE_WRITE(self, _unused):
+    def process_IN_CLOSE_WRITE(self, _unused=None):
         ''' Reacts to modifications of the FROM file '''
+        metadata = {}
         with appviewer_lock():
-            with open(FROM, 'r', encoding='ascii') as vm_from_file:
-                vmname = vm_from_file.readline().strip('\n')
-        if vmname == "":
-            self._paste()
-        else:
-            self._copy(vmname=vmname)
+            if os.path.isfile(METADATA):
+                # parse JSON .metadata file if qubes-guid protocol 1.8 or newer
+                try:
+                    with open(METADATA, 'r', encoding='ascii') as metadata_file:
+                        metadata = json.loads(metadata_file.read())
+                except OSError:
+                    return
+                except json.decoder.JSONDecodeError:
+                    return
+            else:
+                # revert to .source file on qubes-guid protocol 1.7 or older
+                # synthesize metadata based on limited available information
+                with open(FROM, 'r', encoding='ascii') as vm_from_file:
+                    metadata["vmname"] = vm_from_file.readline().strip('\n')
+
+                metadata["copy_action"] = metadata["vmname"] != ""
+                metadata["paste_action"] = metadata["vmname"] == ""
+
+                try:
+                    metadata["sent_size"] = os.path.getsize(DATA)
+                except OSError:
+                    metadata["sent_size"] = 0
+
+                metadata["cleared"] = metadata["sent_size"] == 0
+                metadata["qrexec_request"] = False
+                metadata["malformed_request"] = False
+                metadata["oversized_request"] = metadata["sent_size"] >= 65000
+                metadata["buffer_size"] = 65000
+
+                if metadata["copy_action"] and metadata["sent_size"] == 0:
+                    metadata["successful"] = False
+                else:
+                    metadata["successful"] = True
+
+        if metadata["copy_action"]:
+            self._copy(metadata=metadata)
+        elif metadata["paste_action"]:
+            self._paste(metadata=metadata)
 
     def process_IN_MOVE_SELF(self, _unused):
         ''' Stop loop if file is moved '''
@@ -120,15 +192,18 @@ class EventHandler(pyinotify.ProcessEvent):
 
     def process_IN_CREATE(self, event):
         if event.pathname == FROM:
-            self._copy()
+            self.process_IN_CLOSE_WRITE()
             self.gtk_app.setup_watcher()
 
 
-def clipboard_formatted_size() -> str:
+def clipboard_formatted_size(size: int = None) -> str:
     units = ['B', 'KiB', 'MiB', 'GiB']
 
     try:
-        file_size = os.path.getsize(DATA)
+        if size:
+            file_size = size
+        else:
+            file_size = os.path.getsize(DATA)
     except OSError:
         return _('? bytes')
     if file_size == 1:
