@@ -80,11 +80,25 @@ def run_asyncio_and_show_errors(loop, tasks, name, restart=True):
             exit_code = 1
     return exit_code
 
+def check_update(vm) -> bool:
+    """Return true if the given template/standalone vm is updated or not
+    updateable or skipped. default returns true"""
+    if not vm.features.get('updates-available', False):
+        return True
+    if not getattr(vm, 'updateable', False):
+        return True
+    if bool(vm.features.get('skip-update', False)):
+        return True
+    return False
 
-def check_support(vm):
+def check_support(vm) -> bool:
     """Return true if the given template/standalone vm is still supported, by
     default returns true"""
-    # first, check if qube itself has known eol
+    # first, we skip VMs with `skip-update` feature set to true
+    if bool(vm.features.get('skip-update', False)):
+        return True
+
+    # next, check if qube itself has known eol
     eol_string: str = vm.features.get('os-eol', '')
 
     if not eol_string:

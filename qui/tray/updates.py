@@ -127,43 +127,44 @@ class UpdatesTray(Gtk.Application):
         self.obsolete_vms.clear()
         for vm in self.qapp.domains:
             try:
-                updates_available = vm.features.get('updates-available', False)
+                updated: bool = qui.utils.check_update(vm)
+                supported: bool = qui.utils.check_support(vm)
             except exc.QubesDaemonCommunicationError:
-                updates_available = False
-            if updates_available and \
-                    (getattr(vm, 'updateable', False) or vm.klass == 'AdminVM'):
+                continue
+            if not updated:
                 self.vms_needing_update.add(vm)
-            try:
-                supported = qui.utils.check_support(vm)
-            except exc.QubesDaemonCommunicationError:
-                supported = True
             if not supported:
                 self.obsolete_vms.add(vm.name)
 
     def connect_events(self):
         self.dispatcher.add_handler('domain-feature-set:updates-available',
-                                    self.feature_set)
+                                    self.feature_change)
         self.dispatcher.add_handler('domain-feature-delete:updates-available',
-                                    self.feature_unset)
+                                    self.feature_change)
+        self.dispatcher.add_handler('domain-feature-set:skip-update',
+                                    self.feature_change)
+        self.dispatcher.add_handler('domain-feature-delete:skip-update',
+                                    self.feature_change)
         self.dispatcher.add_handler('domain-add', self.domain_added)
         self.dispatcher.add_handler('domain-delete', self.domain_removed)
         self.dispatcher.add_handler('domain-feature-set:os-eol',
-                                    self.feature_set)
+                                    self.feature_change)
 
-    def domain_added(self, _submitter, _event, vm, *_args, **_kwargs):
+    def domain_added(self, _submitter, _event, vmname, *_args, **_kwargs):
         try:
-            vm_object = self.qapp.domains[vm]
+            vm = self.qapp.domains[vmname]
+            updated: bool = qui.utils.check_update(vm)
+            supported: bool = qui.utils.check_support(vm)
         except exc.QubesException:
             # a disposableVM crashed on start
             return
-        try:
-            updates_available = vm_object.features.get(
-                'updates-available', False)
         except exc.QubesDaemonCommunicationError:
-            updates_available = False
-        if updates_available and (getattr(vm_object, 'updateable', False) or
-                                  vm_object.klass == 'AdminVM'):
-            self.vms_needing_update.add(vm_object.name)
+            return
+        if not updated:
+            self.vms_needing_update.add(vm.name)
+            self.update_indicator_state()
+        if not supported:
+            self.obsolete_vms.add(vm)
             self.update_indicator_state()
 
     def domain_removed(self, _submitter, _event, vm, *_args, **_kwargs):
@@ -174,34 +175,27 @@ class UpdatesTray(Gtk.Application):
             self.obsolete_vms.remove(vm)
             self.update_indicator_state()
 
-    def feature_unset(self, vm, event, feature, **_kwargs):
+    def feature_change(self, vm, event, feature, **_kwargs):
         # pylint: disable=unused-argument
-        if vm in self.vms_needing_update:
+        try:
+            updated: bool = qui.utils.check_update(vm)
+            supported: bool = qui.utils.check_support(vm)
+        except exc.QubesDaemonCommunicationError:
+            return
+
+        if not updated and vm not in self.vms_needing_update:
+            self.vms_needing_update.add(vm)
+            notification = Gio.Notification.new(
+                _("New updates are available for {}.").format(vm.name))
+            notification.set_priority(Gio.NotificationPriority.NORMAL)
+            self.send_notification(None, notification)
+        elif updated and vm in self.vms_needing_update:
             self.vms_needing_update.remove(vm)
-            self.update_indicator_state()
 
-    def feature_set(self, vm, event, feature, value, **_kwargs):
-        # pylint: disable=unused-argument
-        if feature == 'updates-available':
-            if value and vm not in self.vms_needing_update and\
-                    getattr(vm, 'updateable', False):
-                self.vms_needing_update.add(vm)
-
-                notification = Gio.Notification.new(
-                    _("New updates are available for {}.").format(vm.name))
-                notification.set_priority(Gio.NotificationPriority.NORMAL)
-                self.send_notification(None, notification)
-            elif not value and vm in self.vms_needing_update:
-                self.vms_needing_update.remove(vm)
-        elif feature == 'os-eol':
-            try:
-                supported = qui.utils.check_support(vm)
-            except exc.QubesDaemonCommunicationError:
-                supported = True
-            if supported and vm.name in self.obsolete_vms:
-                self.obsolete_vms.remove(vm.name)
-            elif not supported and vm.name not in self.obsolete_vms:
-                self.obsolete_vms.add(vm.name)
+        if not supported and vm not in self.obsolete_vms:
+            self.obsolete_vms.add(vm.name)
+        elif supported and vm in self.obsolete_vms:
+            self.obsolete_vms.remove(vm.name)
 
         self.update_indicator_state()
 
