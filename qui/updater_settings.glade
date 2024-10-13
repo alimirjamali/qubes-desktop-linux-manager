@@ -9,7 +9,7 @@
     <property name="title" translatable="yes">Qubes OS Updater Settings</property>
     <property name="resizable">False</property>
     <property name="default-width">458</property>
-    <property name="default-height">571</property>
+    <property name="default-height">640</property>
     <child>
       <!-- n-columns=3 n-rows=2 -->
       <object class="GtkGrid">
@@ -493,6 +493,72 @@
                         <property name="expand">False</property>
                         <property name="fill">True</property>
                         <property name="position">10</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="filtering_options">
+                        <property name="label" translatable="yes">Filtering Options</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                        <property name="margin-top">18</property>
+                        <property name="hexpand">True</property>
+                        <property name="use-markup">True</property>
+                        <style>
+                          <class name="section_title"/>
+                        </style>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">11</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="hide_skipped">
+                        <property name="label" translatable="yes">Hide qubes with 'skip-update' feature from selection page.</property>
+                        <property name="tooltip-text" translatable="yes">Requires application restart to take effect.</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                        <property name="margin-top">5</property>
+                        <property name="use-underline">True</property>
+                        <property name="active">True</property>
+                        <property name="draw-indicator">True</property>
+                        <style>
+                          <class name="explanation_text"/>
+                        </style>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">12</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="hide_updated">
+                        <property name="label" translatable="yes">Hide already updated qubes from selection page.</property>
+                        <property name="tooltip-text" translatable="yes">Requires application restart to take effect.</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                        <property name="margin-top">5</property>
+                        <property name="use-underline">True</property>
+                        <property name="active">False</property>
+                        <property name="draw-indicator">True</property>
+                        <style>
+                          <class name="explanation_text"/>
+                        </style>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">13</property>
                       </packing>
                     </child>
                   </object>

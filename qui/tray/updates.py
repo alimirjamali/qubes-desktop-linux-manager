@@ -155,10 +155,10 @@ class UpdatesTray(Gtk.Application):
             vm = self.qapp.domains[vmname]
             updated: bool = qui.utils.check_update(vm)
             supported: bool = qui.utils.check_support(vm)
+        except exc.QubesDaemonCommunicationError:
+            return
         except exc.QubesException:
             # a disposableVM crashed on start
-            return
-        except exc.QubesDaemonCommunicationError:
             return
         if not updated:
             self.vms_needing_update.add(vm.name)

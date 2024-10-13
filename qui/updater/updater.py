@@ -152,6 +152,7 @@ class QubesUpdater(Gtk.Application):
             self.log,
             refresh_callback=self.intro_page.refresh_update_list,
             overrides=overrides,
+            advanced=self.cliargs.show_advanced_settings
         )
 
         headers = [(3, "intro_name"), (3, "progress_name"), (3, "summary_name"),
@@ -417,6 +418,12 @@ def parse_args(args, app):
                         help='Run the updater GUI in non-interactive mode. '
                              'Interaction will be required in the event '
                              'of an update error.')
+
+    parser.add_argument('--show-advanced-settings', action='store_true',
+                        help='Show setting options for filtering-out already '
+                             'updated or skipped VMs from VM selection list. '
+                             'These options require application restart to '
+                             'take effect.')
 
     args = parser.parse_args(args)
 

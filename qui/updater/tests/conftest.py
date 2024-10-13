@@ -61,6 +61,9 @@ def test_qapp_impl():
     add_dom0_feature(qapp, 'gui-default-allow-utf8-titles', '')
     add_dom0_feature(qapp, 'gui-default-trayicon-mode', '')
     add_dom0_feature(qapp, 'qubes-vm-update-update-if-stale', None)
+    add_dom0_feature(qapp, 'skip-update', None)
+    add_dom0_feature(qapp, 'qubes-vm-update-hide-skipped', None)
+    add_dom0_feature(qapp, 'qubes-vm-update-hide-updated', None)
 
     # setup labels
     qapp.expected_calls[('dom0', 'admin.label.List', None, None)] = \
@@ -140,6 +143,7 @@ def test_qapp_impl():
     add_feature_to_all(qapp, 'servicevm',
                        ['sys-usb', 'sys-firewall', 'sys-net'])
     add_feature_to_all(qapp, 'os-eol', [])
+    add_feature_to_all(qapp, 'skip-update', [])
 
     return qapp
 
@@ -254,6 +258,8 @@ def mock_settings():
             self.restart_service_vms = True
             self.restart_other_vms = True
             self.max_concurrency = None
+            self.hide_skipped = True
+            self.hide_updated = False
 
     return MockSettings()
 
