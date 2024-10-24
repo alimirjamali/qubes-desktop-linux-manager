@@ -25,6 +25,8 @@ import sys
 import traceback
 from html import escape
 
+from qubesadmin import exc
+
 import gettext
 
 import importlib.resources
@@ -83,32 +85,38 @@ def run_asyncio_and_show_errors(loop, tasks, name, restart=True):
 def check_update(vm) -> bool:
     """Return true if the given template/standalone vm is updated or not
     updateable or skipped. default returns true"""
-    if not vm.features.get('updates-available', False):
-        return True
-    if not getattr(vm, 'updateable', False):
-        return True
-    if bool(vm.features.get('skip-update', False)):
+    try:
+        if not vm.features.get('updates-available', False):
+            return True
+        if not getattr(vm, 'updateable', False):
+            return True
+        if bool(vm.features.get('skip-update', False)):
+            return True
+    except exc.QubesException:
         return True
     return False
 
 def check_support(vm) -> bool:
     """Return true if the given template/standalone vm is still supported, by
     default returns true"""
-    # first, we skip VMs with `skip-update` feature set to true
-    if bool(vm.features.get('skip-update', False)):
-        return True
-
-    # next, check if qube itself has known eol
-    eol_string: str = vm.features.get('os-eol', '')
-
-    if not eol_string:
-        template_name: str = vm.features.get('template-name', '')
-        if not template_name:
+    try:
+        # first, we skip VMs with `skip-update` feature set to true
+        if bool(vm.features.get('skip-update', False)):
             return True
-        for suffix in SUFFIXES:
-            template_name = template_name.removesuffix(suffix)
-        eol_string = EOL_DATES.get(template_name, None)
+
+        # next, check if qube itself has known eol
+        eol_string: str = vm.features.get('os-eol', '')
+
         if not eol_string:
-            return True
+            template_name: str = vm.features.get('template-name', '')
+            if not template_name:
+                return True
+            for suffix in SUFFIXES:
+                template_name = template_name.removesuffix(suffix)
+            eol_string = EOL_DATES.get(template_name, None)
+            if not eol_string:
+                return True
+    except exc.QubesException:
+        return True
     eol = datetime.strptime(eol_string, '%Y-%m-%d')
     return eol > datetime.now()
