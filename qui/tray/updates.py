@@ -126,11 +126,8 @@ class UpdatesTray(Gtk.Application):
         self.vms_needing_update.clear()
         self.obsolete_vms.clear()
         for vm in self.qapp.domains:
-            try:
-                updated: bool = qui.utils.check_update(vm)
-                supported: bool = qui.utils.check_support(vm)
-            except exc.QubesDaemonCommunicationError:
-                continue
+            updated: bool = qui.utils.check_update(vm)
+            supported: bool = qui.utils.check_support(vm)
             if not updated:
                 self.vms_needing_update.add(vm)
             if not supported:
@@ -153,13 +150,13 @@ class UpdatesTray(Gtk.Application):
     def domain_added(self, _submitter, _event, vmname, *_args, **_kwargs):
         try:
             vm = self.qapp.domains[vmname]
-            updated: bool = qui.utils.check_update(vm)
-            supported: bool = qui.utils.check_support(vm)
         except exc.QubesDaemonCommunicationError:
             return
         except exc.QubesException:
             # a disposableVM crashed on start
             return
+        updated: bool = qui.utils.check_update(vm)
+        supported: bool = qui.utils.check_support(vm)
         if not updated:
             self.vms_needing_update.add(vm.name)
             self.update_indicator_state()
@@ -177,11 +174,8 @@ class UpdatesTray(Gtk.Application):
 
     def feature_change(self, vm, event, feature, **_kwargs):
         # pylint: disable=unused-argument
-        try:
-            updated: bool = qui.utils.check_update(vm)
-            supported: bool = qui.utils.check_support(vm)
-        except exc.QubesDaemonCommunicationError:
-            return
+        updated: bool = qui.utils.check_update(vm)
+        supported: bool = qui.utils.check_support(vm)
 
         if not updated and vm not in self.vms_needing_update:
             self.vms_needing_update.add(vm)
