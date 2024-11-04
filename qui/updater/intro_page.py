@@ -94,12 +94,30 @@ class IntroPage:
         for vm in qapp.domains:
             if vm.klass == 'AdminVM':
                 try:
+                    if settings.hide_skipped and bool(vm.features.get( \
+                            'skip-update', False)):
+                        continue
                     state = bool(vm.features.get('updates-available', False))
                 except exc.QubesDaemonCommunicationError:
                     state = False
                 self.list_store.append_vm(vm, state)
 
+        to_update=set()
+        if settings.hide_updated:
+            cmd = ['qubes-vm-update', '--quiet', '--dry-run',
+                   '--update-if-stale', str(settings.update_if_stale)]
+            to_update = self._get_stale_qubes(cmd)
+
         for vm in qapp.domains:
+            try:
+                if settings.hide_skipped and bool(vm.features.get( \
+                        'skip-update', False)):
+                    continue
+                if settings.hide_updated and not vm.name in to_update:
+                    # TODO: Make re-filtering possible without App restart
+                    continue
+            except exc.QubesDaemonCommunicationError:
+                continue
             if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
                 self.list_store.append_vm(vm)
 
