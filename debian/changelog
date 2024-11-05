@@ -1,3 +1,20 @@
+qubes-desktop-linux-manager (4.3.4-1) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * Fix typo in showing Xen version on the "This Device" tab
+
+  [ Ali Mirjamali ]
+  * Add Ctrl+A Accelerator to GUI Updater Intro page
+  * Select stale qubes for update too
+  * Do not allow whitespace in Policy filename
+  * Make consistent use of MiB & GiB in GUI/CLI tools
+  * Clipboard notification improvements with .metadata
+  * Do not notify outdated & EOL VMs if `skip-update` set
+  * Add filtering options to Qubes Update GUI
+  * Move catching exception inside helper functions
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 05 Nov 2024 05:00:28 +0100
+
 qubes-desktop-linux-manager (4.3.3-1) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
