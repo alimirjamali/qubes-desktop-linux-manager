@@ -172,7 +172,8 @@ class EventHandler(pyinotify.ProcessEvent):
         ''' Reacts to modifications of the FROM file '''
         metadata = {}
         with appviewer_lock():
-            if os.path.isfile(METADATA):
+            if (os.path.isfile(METADATA) and
+                    os.path.getmtime(METADATA) >= os.path.getmtime(DATA)):
                 # parse JSON .metadata file if qubes-guid protocol 1.8 or newer
                 try:
                     with open(METADATA, 'r', encoding='ascii') as metadata_file:
@@ -196,7 +197,7 @@ class EventHandler(pyinotify.ProcessEvent):
                     metadata["sent_size"] = 0
 
                 metadata["cleared"] = metadata["sent_size"] == 0
-                metadata["qrexec_request"] = False
+                metadata["qrexec_clipboard"] = False
                 metadata["malformed_request"] = False
                 metadata["oversized_request"] = metadata["sent_size"] >= 65000
                 metadata["buffer_size"] = 65000
