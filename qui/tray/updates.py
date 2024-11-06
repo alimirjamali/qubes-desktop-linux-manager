@@ -147,9 +147,9 @@ class UpdatesTray(Gtk.Application):
         self.dispatcher.add_handler('domain-feature-set:os-eol',
                                     self.feature_change)
 
-    def domain_added(self, _submitter, _event, vmname, *_args, **_kwargs):
+    def domain_added(self, _submitter, _event, vm, *_args, **_kwargs):
         try:
-            vm = self.qapp.domains[vmname]
+            vm = self.qapp.domains[vm]
         except exc.QubesDaemonCommunicationError:
             return
         except exc.QubesException:
