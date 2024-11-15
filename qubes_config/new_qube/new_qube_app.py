@@ -81,6 +81,20 @@ class CreateNewQube(Gtk.Application):
         self.perform_setup()
         assert self.main_window
         self.main_window.show()
+        if self.main_window.get_allocated_width() > \
+                self.main_window.get_screen().get_width():
+            width = int(self.main_window.get_screen().get_width() * 0.9)
+        else:
+            # try to have at least 1100 pixels
+            width = min(int(self.main_window.get_screen().get_width() * 0.9),
+                        800)
+        if self.main_window.get_allocated_height() > \
+                self.main_window.get_screen().get_height() * 0.9:
+            height = int(self.main_window.get_screen().get_height() * 0.9)
+        else:
+            height = self.main_window.get_allocated_height()
+        self.main_window.resize(width, height)
+
         self.hold()
 
     def perform_setup(self):
