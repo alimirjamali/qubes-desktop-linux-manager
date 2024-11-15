@@ -1,3 +1,11 @@
+qubes-desktop-linux-manager (4.3.6-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Auto-resize new qube window to screen size
+  * Add -o/--open-at option to global config
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 15 Nov 2024 15:52:42 +0100
+
 qubes-desktop-linux-manager (4.3.5-1) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
