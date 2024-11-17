@@ -1,3 +1,32 @@
+qubes-desktop-linux-manager (4.3.7-1) unstable; urgency=medium
+
+  [ Piotr Bartman-Szwarc ]
+  * q-dev: implement device_id
+  * q-dev: fix detaching
+  * q-dev: virtual device
+  * q-dev: cleanup
+  * q-dev: move gui parts from core-admin
+  * q-dev: fix setup.py
+  * q-dev: include tools
+  * q-dev: update glade path
+  * q-dev: simplification of device agent
+  * q-dev: cleanup
+  * q-dev: remove guivm from args of attach-confirm
+  * q-dev: drop dependence on qubes core
+  * q-dev: make pylint happy
+  * q-dev: remove literals
+  * q-dev: rename attach-confirm -> qubes-device-attach-confirm
+  * q-dev: add short way to create DeviceAssignment
+  * q-dev: better variable naming
+  * q-dev: cleanup
+  * q-dev: remove qubes-device-attach-confirm
+
+  [ Marek Marczykowski-Górecki ]
+  * Adjust dependencies for new devices API
+  * ci: switch to R4.3
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 17 Nov 2024 04:29:50 +0100
+
 qubes-desktop-linux-manager (4.3.6-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]
