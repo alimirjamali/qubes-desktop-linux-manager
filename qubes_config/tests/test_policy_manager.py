@@ -103,7 +103,7 @@ def test_get_policy_from_file_existing():
         return "", ""
 
     with patch(
-        "qubes_config.global_config.policy_manager." "PolicyClient.policy_get"
+        "qubes_config.global_config.policy_manager.PolicyClient.policy_get"
     ) as mock_get:
         mock_get.side_effect = get_file
 
