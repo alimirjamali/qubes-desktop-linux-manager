@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import traceback
+import abc
 
 import gi  # isort:skip
 import qubesadmin
@@ -82,7 +83,11 @@ def show_error(title, text):
     GLib.idle_add(dialog.show)
 
 
-class ActionMenuItem(Gtk.MenuItem):
+class ABCGtkMenuItemMeta(abc.ABCMeta, type(Gtk.MenuItem)):
+    pass
+
+
+class ActionMenuItem(Gtk.MenuItem, metaclass=ABCGtkMenuItemMeta):
     def __init__(self, label, img=None, icon_cache=None, icon_name=None):
         super().__init__()
 
@@ -112,11 +117,11 @@ class ActionMenuItem(Gtk.MenuItem):
         # Connect the "activate" signal to the async function
         self.connect("activate", self.on_activate)
 
+    @abc.abstractmethod
     async def perform_action(self):
         """
         Action this item should perform (to be implemented by subclasses).
         """
-        raise NotImplementedError("Subclasses must implement this method.")
 
     def on_activate(self, *_args, **_kwargs):
         asyncio.create_task(self.perform_action())
