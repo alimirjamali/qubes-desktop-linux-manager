@@ -368,6 +368,7 @@ class StartedMenu(Gtk.Menu):
         if self.vm.klass != "DispVM" or not self.vm.auto_cleanup:
             self.add(RestartItem(self.vm, icon_cache))
 
+        self.set_reserve_toggle_size(False)
         self.show_all()
 
 
@@ -382,6 +383,7 @@ class PausedMenu(Gtk.Menu):
         self.add(UnpauseItem(self.vm, icon_cache))
         self.add(KillItem(self.vm, icon_cache))
 
+        self.set_reserve_toggle_size(False)
         self.show_all()
 
 
@@ -411,6 +413,7 @@ class DebugMenu(Gtk.Menu):
 
         self.add(KillItem(self.vm, icon_cache))
 
+        self.set_reserve_toggle_size(False)
         self.show_all()
 
 
@@ -449,6 +452,7 @@ class InternalMenu(Gtk.Menu):
         else:
             self.add(KillItem(self.vm, icon_cache))
 
+        self.set_reserve_toggle_size(False)
         self.show_all()
 
 
@@ -632,6 +636,7 @@ class DomainTray(Gtk.Application):
         )
 
         self.tray_menu = Gtk.Menu()
+        self.tray_menu.set_reserve_toggle_size(False)
 
         self.icon_cache = IconCache()
 
