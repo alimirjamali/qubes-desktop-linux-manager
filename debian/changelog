@@ -1,3 +1,28 @@
+qubes-desktop-linux-manager (4.3.8-1) unstable; urgency=medium
+
+  [ Ali Mirjamali ]
+  * Show progress bar after loading CSS theme
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix test error
+
+  [ Frédéric Pierret (fepitre) ]
+  * Reformat code with python-black
+  * Make pylint happy after reformat
+
+  [ Demi Marie Obenour ]
+  * updater: make UpdateListIter a proper iterator
+
+  [ Marta Marczykowska-Górecka ]
+  * Don't change combobox on mouse scroll
+
+  [ Frédéric Pierret (fepitre) ]
+  * Rework domains widget
+  * domains: use custom metaclass for ActionMenuItem
+  * Remove enforced extra space on the menu
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 12 Jan 2025 00:53:25 +0100
+
 qubes-desktop-linux-manager (4.3.7-1) unstable; urgency=medium
 
   [ Piotr Bartman-Szwarc ]
