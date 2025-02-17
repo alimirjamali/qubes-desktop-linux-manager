@@ -1,3 +1,17 @@
+qubes-desktop-linux-manager (4.3.9-1) unstable; urgency=medium
+
+  [ Ali Mirjamali ]
+  * Mark inactive "create" button as gray
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix setting VM label in domains widgets in some circumstances
+  * New and improved icons
+  * Improved Global Config
+  * Make qui-* icons gray
+  * Improve dark mode readability, make icons more neutral
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 17 Feb 2025 19:22:49 +0100
+
 qubes-desktop-linux-manager (4.3.8-1) unstable; urgency=medium
 
   [ Ali Mirjamali ]
