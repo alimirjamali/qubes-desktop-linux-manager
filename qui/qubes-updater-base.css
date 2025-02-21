@@ -237,3 +237,14 @@ treeview.view:selected {
     color: @qubes-blue;
     font-weight: bold;
 }
+
+tooltip {
+}
+
+tooltip * {
+    color: black;
+    font-size: 14pt;
+    background-color: red;
+    border: black;
+    border-color: black;
+}
